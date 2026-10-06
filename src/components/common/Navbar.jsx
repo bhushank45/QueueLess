@@ -47,10 +47,10 @@ function Navbar() {
             </Link>
 
             <Link
-              to="/join-queue"
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
+              to="/login"
+              className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
             >
-              Join Queue
+              Sign In
             </Link>
           </div>
 
