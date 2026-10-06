@@ -10,7 +10,10 @@ function Hero() {
         <div className="grid items-center gap-8 lg:grid-cols-[1fr_0.9fr] lg:gap-20">
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
               <span className="text-xs font-semibold text-blue-700 sm:text-sm">
                 Queues are moving
               </span>
