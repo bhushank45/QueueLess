@@ -104,11 +104,11 @@ function Navbar() {
               </Link>
 
               <Link
-                to="/join-queue"
+                to="/login"
                 onClick={() => setIsMenuOpen(false)}
                 className="mt-1 rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white"
               >
-                Join Queue
+                Sign In
               </Link>
             </div>
           </div>
