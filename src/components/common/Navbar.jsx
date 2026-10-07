@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import Logo from "./Logo";
@@ -15,27 +15,66 @@ function Navbar() {
           </Link>
 
           <div className="hidden items-center gap-10 md:flex">
-            <Link
+            <NavLink
               to="/"
-              className="relative py-2 text-sm font-semibold text-blue-600"
+              end
+              className={({ isActive }) =>
+                `relative py-2 text-sm font-semibold transition ${
+                  isActive
+                    ? "text-blue-600"
+                    : "text-slate-700 hover:text-blue-600"
+                }`
+              }
             >
-              Home
-              <span className="absolute bottom-0 left-0 h-0.5 w-full rounded-full bg-blue-600" />
-            </Link>
+              {({ isActive }) => (
+                <>
+                  Home
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 h-0.5 w-full rounded-full bg-blue-600" />
+                  )}
+                </>
+              )}
+            </NavLink>
 
-            <Link
+            <NavLink
               to="/services"
-              className="py-2 text-sm font-medium text-slate-700 transition hover:text-blue-600"
+              className={({ isActive }) =>
+                `relative py-2 text-sm font-medium transition ${
+                  isActive
+                    ? "text-blue-600"
+                    : "text-slate-700 hover:text-blue-600"
+                }`
+              }
             >
-              Services
-            </Link>
+              {({ isActive }) => (
+                <>
+                  Services
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 h-0.5 w-full rounded-full bg-blue-600" />
+                  )}
+                </>
+              )}
+            </NavLink>
 
-            <Link
+            <NavLink
               to="/queue"
-              className="py-2 text-sm font-medium text-slate-700 transition hover:text-blue-600"
+              className={({ isActive }) =>
+                `relative py-2 text-sm font-medium transition ${
+                  isActive
+                    ? "text-blue-600"
+                    : "text-slate-700 hover:text-blue-600"
+                }`
+              }
             >
-              My Queue
-            </Link>
+              {({ isActive }) => (
+                <>
+                  My Queue
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 h-0.5 w-full rounded-full bg-blue-600" />
+                  )}
+                </>
+              )}
+            </NavLink>
           </div>
 
           <div className="hidden items-center gap-5 md:flex">
@@ -71,29 +110,48 @@ function Navbar() {
         {isMenuOpen && (
           <div className="mt-4 border-t border-slate-100 pt-4 md:hidden">
             <div className="flex flex-col gap-1">
-              <Link
+              <NavLink
                 to="/"
+                end
                 onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-600"
+                className={({ isActive }) =>
+                  `rounded-xl px-4 py-3 text-sm font-semibold ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-slate-700 hover:bg-slate-50"
+                  }`
+                }
               >
                 Home
-              </Link>
+              </NavLink>
 
-              <Link
+              <NavLink
                 to="/services"
                 onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className={({ isActive }) =>
+                  `rounded-xl px-4 py-3 text-sm font-medium ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-slate-700 hover:bg-slate-50"
+                  }`
+                }
               >
                 Services
-              </Link>
+              </NavLink>
 
-              <Link
+              <NavLink
                 to="/queue"
                 onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className={({ isActive }) =>
+                  `rounded-xl px-4 py-3 text-sm font-medium ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-slate-700 hover:bg-slate-50"
+                  }`
+                }
               >
                 My Queue
-              </Link>
+              </NavLink>
 
               <Link
                 to="/login"

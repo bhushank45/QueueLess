@@ -27,7 +27,7 @@ function Queue() {
           <QueueCard queue={queue} />
 
           {/* Information Cards */}
-          <div className="mx-auto mt-4 grid max-w-lg gap-3 sm:grid-cols-2">
+          <div className="mx-auto mt-4 grid max-w-2xl gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">

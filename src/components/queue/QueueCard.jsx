@@ -2,7 +2,7 @@ import { Bell, Clock3, LogOut, ShieldCheck } from "lucide-react";
 
 function QueueCard({ queue }) {
   return (
-    <div className="mx-auto max-w-lg rounded-2xl border border-slate-100 bg-white px-6 py-7 shadow-sm sm:px-7">
+    <div className="mx-auto max-w-2xl rounded-2xl border border-slate-100 bg-white px-6 py-8 shadow-sm sm:px-9 sm:py-10">
       {/* Queue Status */}
       <div className="flex justify-center">
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5">
@@ -29,12 +29,12 @@ function QueueCard({ queue }) {
       </div>
 
       {/* Token */}
-      <div className="mt-6 rounded-xl bg-[#f0f1ff] px-6 py-6 text-center">
+      <div className="mt-7 rounded-xl bg-[#f0f1ff] px-6 py-8 text-center sm:py-9">
         <p className="text-[10px] font-semibold tracking-[0.18em] text-blue-700">
           YOUR TOKEN
         </p>
 
-        <p className="mt-1 text-5xl font-bold tracking-tight text-blue-700">
+        <p className="mt-1 text-5xl font-bold tracking-tight text-blue-700 sm:text-6xl">
           {queue.token}
         </p>
 
@@ -46,9 +46,9 @@ function QueueCard({ queue }) {
       </div>
 
       {/* Queue Stats */}
-      <div className="mt-5 grid grid-cols-3 gap-2">
+      <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
         {/* Current Token */}
-        <div className="rounded-xl bg-[#f0f1ff] px-3 py-4 text-center">
+        <div className="rounded-xl bg-[#f0f1ff] px-2 py-5 text-center sm:px-4">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">
             Current Token
           </p>
@@ -69,7 +69,7 @@ function QueueCard({ queue }) {
         </div>
 
         {/* Position */}
-        <div className="rounded-xl bg-[#f0f1ff] px-3 py-4 text-center">
+        <div className="rounded-xl bg-[#f0f1ff] px-2 py-5 text-center sm:px-4">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">
             Your Position
           </p>
@@ -86,7 +86,7 @@ function QueueCard({ queue }) {
         </div>
 
         {/* Estimated Wait */}
-        <div className="rounded-xl bg-[#f0f1ff] px-3 py-4 text-center">
+        <div className="rounded-xl bg-[#f0f1ff] px-2 py-5 text-center sm:px-4">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">
             Estimated Wait
           </p>
