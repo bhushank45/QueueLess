@@ -159,7 +159,7 @@ function AppRoutes() {
       <Route
         path="/services"
         element={
-          <ProtectedRoute allowedRole="user">
+          <ProtectedRoute>
             <Services />
           </ProtectedRoute>
         }
@@ -168,7 +168,7 @@ function AppRoutes() {
       <Route
         path="/queue"
         element={
-          <ProtectedRoute allowedRole="user">
+          <ProtectedRoute>
             <Queue />
           </ProtectedRoute>
         }

@@ -307,35 +307,6 @@ function LoginForm() {
         )}
       </button>
 
-      {/* =========================
-          OR Divider
-      ========================= */}
-
-      <div className="flex items-center gap-4">
-        <div className="h-px flex-1 bg-slate-200" />
-
-        <span className="text-xs font-medium text-slate-400">
-          OR
-        </span>
-
-        <div className="h-px flex-1 bg-slate-200" />
-      </div>
-
-      {/* =========================
-          Google Button
-      ========================= */}
-
-      <button
-        type="button"
-        disabled={loading}
-        className="flex h-14 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-800 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        <span className="text-lg font-bold text-red-600">
-          G
-        </span>
-
-        Continue with Google
-      </button>
     </form>
   );
 }

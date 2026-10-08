@@ -1,9 +1,18 @@
 import { ArrowRight, Clock, RefreshCw, Ticket } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import BenefitItem from "./BenefitItem";
 import LiveTokenCard from "./LiveTokenCard";
 
 function Hero() {
+  const { user, role, loading } = useAuth();
+  const secondaryAction = user
+    ? {
+        label: role === "admin" ? "Admin Dashboard" : "My Queue",
+        to: role === "admin" ? "/admin" : "/queue",
+      }
+    : { label: "Login", to: "/login" };
+
   return (
     <section className="overflow-hidden">
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
@@ -40,12 +49,14 @@ function Hero() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
 
-              <Link
-                to="/login"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                Login
-              </Link>
+              {!loading && (
+                <Link
+                  to={secondaryAction.to}
+                  className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  {secondaryAction.label}
+                </Link>
+              )}
             </div>
           </div>
 
