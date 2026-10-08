@@ -1,18 +1,57 @@
-import { Bell, Clock3, LogOut, ShieldCheck } from "lucide-react";
+import {
+  Bell,
+  Clock3,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react";
 
-function QueueCard({ queue }) {
+function QueueCard({
+  queue,
+  onLeaveQueue,
+  leaving = false,
+}) {
+  const isServing = queue.status === "serving";
+
   return (
     <div className="mx-auto max-w-2xl rounded-2xl border border-slate-100 bg-white px-6 py-8 shadow-sm sm:px-9 sm:py-10">
-      {/* Queue Status */}
+
+      {/* Status */}
       <div className="flex justify-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5">
+        <div
+          className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 ${
+            isServing
+              ? "bg-blue-50"
+              : "bg-emerald-50"
+          }`}
+        >
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            <span
+              className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
+                isServing
+                  ? "bg-blue-400"
+                  : "bg-emerald-400"
+              }`}
+            />
+
+            <span
+              className={`relative inline-flex h-2 w-2 rounded-full ${
+                isServing
+                  ? "bg-blue-500"
+                  : "bg-emerald-500"
+              }`}
+            />
           </span>
 
-          <span className="text-xs font-medium text-emerald-700">
-            You&apos;re in the queue
+          <span
+            className={`text-xs font-medium ${
+              isServing
+                ? "text-blue-700"
+                : "text-emerald-700"
+            }`}
+          >
+            {isServing
+              ? "You are being served"
+              : "You're in the queue"}
           </span>
         </div>
       </div>
@@ -45,15 +84,16 @@ function QueueCard({ queue }) {
         </div>
       </div>
 
-      {/* Queue Stats */}
+      {/* Stats */}
       <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
-        {/* Current Token */}
+
+        {/* Current */}
         <div className="rounded-xl bg-[#f0f1ff] px-2 py-5 text-center sm:px-4">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">
             Current Token
           </p>
 
-          <p className="mt-1 text-2xl font-bold text-slate-900">
+          <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
             {queue.currentToken}
           </p>
 
@@ -61,11 +101,9 @@ function QueueCard({ queue }) {
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
 
             <span className="text-[10px] font-semibold text-emerald-600">
-              Active
+              Live
             </span>
           </div>
-
-          <p className="mt-1 text-[10px] text-slate-500">Serving now</p>
         </div>
 
         {/* Position */}
@@ -75,17 +113,25 @@ function QueueCard({ queue }) {
           </p>
 
           <p className="mt-1 text-2xl font-bold text-blue-700">
-            #{queue.position}
+            {queue.position === 0
+              ? "NOW"
+              : `#${queue.position}`}
           </p>
 
-          <p className="text-[10px] font-medium text-slate-600">in line</p>
-
-          <p className="mt-1 text-[10px] text-slate-500">
-            {queue.peopleAhead} patients ahead
+          <p className="text-[10px] font-medium text-slate-600">
+            {queue.position === 0
+              ? "being served"
+              : "in line"}
           </p>
+
+          {!isServing && (
+            <p className="mt-1 text-[10px] text-slate-500">
+              {queue.peopleAhead} ahead
+            </p>
+          )}
         </div>
 
-        {/* Estimated Wait */}
+        {/* Wait */}
         <div className="rounded-xl bg-[#f0f1ff] px-2 py-5 text-center sm:px-4">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">
             Estimated Wait
@@ -93,16 +139,18 @@ function QueueCard({ queue }) {
 
           <p className="mt-1 text-2xl font-bold text-slate-900">
             {queue.estimatedWait}
-            <span className="ml-1 text-xs font-semibold">mins</span>
+            <span className="ml-1 text-xs font-semibold">
+              mins
+            </span>
           </p>
 
           <p className="mt-1 text-[10px] text-slate-500">
-            ~{queue.waitPerPatient} min / patient
+            ~{queue.waitPerPatient} min / person
           </p>
         </div>
       </div>
 
-      {/* Queue Announcement */}
+      {/* Announcement */}
       <div className="mt-4 flex items-center gap-3 rounded-xl bg-[#f0f1ff] px-4 py-3.5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
           <Bell className="h-4 w-4" />
@@ -110,21 +158,29 @@ function QueueCard({ queue }) {
 
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-slate-900">
-            Stay nearby OPD Waiting Area B
+            {isServing
+              ? "Please proceed to the service desk."
+              : queue.peopleAhead === 0
+                ? "You are next."
+                : `${queue.peopleAhead} ${
+                    queue.peopleAhead === 1
+                      ? "person"
+                      : "people"
+                  } ahead of you.`}
           </p>
 
           <p className="mt-0.5 text-[10px] leading-4 text-slate-500">
-            We&apos;ll buzz your device when 1 person is ahead of you.
+            Queue status updates automatically.
           </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 text-[10px] font-semibold text-emerald-600">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          SMS Live
+          Live
         </div>
       </div>
 
-      {/* Bottom Row */}
+      {/* Bottom */}
       <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
         <div className="flex items-center gap-1.5 text-xs text-slate-600">
           <Clock3 className="h-3.5 w-3.5" />
@@ -132,13 +188,20 @@ function QueueCard({ queue }) {
           <span>Joined at {queue.joinedAt}</span>
         </div>
 
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3.5 py-2.5 text-xs font-semibold text-red-500 transition hover:bg-red-100"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          Leave Queue
-        </button>
+        {!isServing && (
+          <button
+            type="button"
+            disabled={leaving}
+            onClick={onLeaveQueue}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3.5 py-2.5 text-xs font-semibold text-red-500 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+
+            {leaving
+              ? "Leaving..."
+              : "Leave Queue"}
+          </button>
+        )}
       </div>
     </div>
   );
