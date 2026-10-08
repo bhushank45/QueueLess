@@ -1,16 +1,60 @@
-# React + Vite
+# QueueLess
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+QueueLess is a web app for joining service queues online and tracking your place without waiting in a physical line. Customers can browse available services, take a queue token, and follow live queue updates. Staff can manage services and monitor waiting and currently served customers from an admin dashboard.
 
-Currently, two official plugins are available:
+**Live demo:** [queue-less-react.vercel.app](https://queue-less-react.vercel.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Customer registration and sign-in with Firebase Authentication.
+- Browse services and join a queue to receive a token.
+- View the active queue and service updates in real time.
+- Admin dashboard with queue and service management.
+- Role-protected customer and admin pages.
+- Responsive React interface styled with Tailwind CSS.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech stack
 
-## Expanding the Oxlint configuration
+- React 19
+- Vite 8
+- React Router
+- Firebase Authentication and Cloud Firestore
+- Tailwind CSS 4
+- Lucide React icons
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Getting started
+
+### Requirements
+
+- Node.js and npm
+- A Firebase project with Authentication and Cloud Firestore enabled
+
+### Install and run
+
+```bash
+git clone https://github.com/bhushank45/QueueLess.git
+cd QueueLess
+npm install
+npm run dev
+```
+
+Vite prints the local development URL in the terminal, usually `http://localhost:5173`.
+
+## Firebase configuration
+
+The Firebase web app configuration is defined in [`src/firebase/firebase.js`](./src/firebase/firebase.js). To use your own Firebase project, update that configuration with the project's web app settings, enable the sign-in provider used by the app, and configure Cloud Firestore.
+
+QueueLess reads user profiles from the `users` collection and uses the `services` and `queues` collections for service and queue data. Configure Firestore security rules to enforce authenticated access and appropriate customer/admin permissions. Admin access depends on the user's Firestore profile having the `admin` role; assign that role only through a trusted administrative process.
+
+## Available scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Create a production build in `dist/` |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | Run ESLint |
+
+## Deployment
+
+The app is deployed on [Vercel](https://vercel.com/). Import the repository into Vercel and deploy with the default Vite build settings (`npm run build`, output directory `dist`). The included [`vercel.json`](./vercel.json) rewrites application routes to `index.html`, so direct navigation to client-side routes works.
