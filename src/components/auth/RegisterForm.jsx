@@ -24,8 +24,7 @@ function RegisterForm() {
 
     const newErrors = {};
 
-    const emailRegex =
-      /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    const emailRegex = /^[A-Za-z0-9._%+-]+@gmail\.com$/;
 
     const passwordRegex = /^.{8,}$/;
 
@@ -83,7 +82,7 @@ function RegisterForm() {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email.trim(),
-        password
+        password,
       );
 
       const user = userCredential.user;
@@ -132,8 +131,7 @@ function RegisterForm() {
       // Firestore permission error
       else if (error.code === "permission-denied") {
         setErrors({
-          general:
-            "Account created, but your profile could not be saved.",
+          general: "Account created, but your profile could not be saved.",
         });
       }
 
@@ -150,7 +148,6 @@ function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-
       {/* General Firebase Error */}
       {errors.general && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-600">
@@ -182,9 +179,7 @@ function RegisterForm() {
         </div>
 
         {errors.name && (
-          <p className="mt-2 text-sm text-red-500">
-            {errors.name}
-          </p>
+          <p className="mt-2 text-sm text-red-500">{errors.name}</p>
         )}
       </div>
 
@@ -212,9 +207,7 @@ function RegisterForm() {
         </div>
 
         {errors.email && (
-          <p className="mt-2 text-sm text-red-500">
-            {errors.email}
-          </p>
+          <p className="mt-2 text-sm text-red-500">{errors.email}</p>
         )}
       </div>
 
@@ -256,9 +249,7 @@ function RegisterForm() {
         </div>
 
         {errors.password && (
-          <p className="mt-2 text-sm text-red-500">
-            {errors.password}
-          </p>
+          <p className="mt-2 text-sm text-red-500">{errors.password}</p>
         )}
       </div>
 
@@ -286,9 +277,7 @@ function RegisterForm() {
 
           <button
             type="button"
-            onClick={() =>
-              setShowConfirmPassword(!showConfirmPassword)
-            }
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             disabled={loading}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
             aria-label={
@@ -306,9 +295,7 @@ function RegisterForm() {
         </div>
 
         {errors.confirmPassword && (
-          <p className="mt-2 text-sm text-red-500">
-            {errors.confirmPassword}
-          </p>
+          <p className="mt-2 text-sm text-red-500">{errors.confirmPassword}</p>
         )}
       </div>
 
