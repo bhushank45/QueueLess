@@ -2,13 +2,30 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+const requiredEnv = (name, value) => {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+
+  return value;
+};
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBbGdAjmO2kDx1TUPZSgOg4HFGJ-vY1YVw",
-  authDomain: "queueless-defaa.firebaseapp.com",
-  projectId: "queueless-defaa",
-  storageBucket: "queueless-defaa.firebasestorage.app",
-  messagingSenderId: "358419033421",
-  appId: "1:358419033421:web:70067b773a1fcda4781b04",
+  apiKey: requiredEnv("VITE_FIREBASE_API_KEY", import.meta.env.VITE_FIREBASE_API_KEY),
+  authDomain: requiredEnv(
+    "VITE_FIREBASE_AUTH_DOMAIN",
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  ),
+  projectId: requiredEnv("VITE_FIREBASE_PROJECT_ID", import.meta.env.VITE_FIREBASE_PROJECT_ID),
+  storageBucket: requiredEnv(
+    "VITE_FIREBASE_STORAGE_BUCKET",
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  ),
+  messagingSenderId: requiredEnv(
+    "VITE_FIREBASE_MESSAGING_SENDER_ID",
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  ),
+  appId: requiredEnv("VITE_FIREBASE_APP_ID", import.meta.env.VITE_FIREBASE_APP_ID),
 };
 
 const app = initializeApp(firebaseConfig);

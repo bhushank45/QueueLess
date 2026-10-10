@@ -42,7 +42,9 @@ Vite prints the local development URL in the terminal, usually `http://localhost
 
 ## Firebase configuration
 
-The Firebase web app configuration is defined in [`src/firebase/firebase.js`](./src/firebase/firebase.js). To use your own Firebase project, update that configuration with the project's web app settings, enable the sign-in provider used by the app, and configure Cloud Firestore.
+Copy `.env.example` to `.env.local` and fill in the Firebase web app settings from your Firebase project. `.env.local` is ignored by Git. Configure the same `VITE_FIREBASE_*` variables in your deployment environment (for example, Vercel's project settings) before building. The app requires these variables at startup; see [`src/firebase/firebase.js`](./src/firebase/firebase.js).
+
+Vite embeds `VITE_*` values in the browser bundle, so environment variables keep configuration out of the GitHub source but do not make Firebase web settings secret. Restrict the API key to your app's required APIs and domains, and use Firebase Authentication and Firestore security rules to protect data.
 
 QueueLess reads user profiles from the `users` collection and uses the `services` and `queues` collections for service and queue data. Configure Firestore security rules to enforce authenticated access and appropriate customer/admin permissions. Admin access depends on the user's Firestore profile having the `admin` role; assign that role only through a trusted administrative process.
 
