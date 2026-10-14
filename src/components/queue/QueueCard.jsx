@@ -90,7 +90,7 @@ function QueueCard({
         {/* Current */}
         <div className="rounded-xl bg-[#f0f1ff] px-2 py-5 text-center sm:px-4">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">
-            Current Token
+            Last Called
           </p>
 
           <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">

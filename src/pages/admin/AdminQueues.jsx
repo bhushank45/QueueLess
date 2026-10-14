@@ -112,6 +112,7 @@ const getTokenLabel = (queue) => {
 function AdminQueues() {
   const [services, setServices] = useState([]);
   const [queues, setQueues] = useState([]);
+  const [queuesLoaded, setQueuesLoaded] = useState(false);
   const [users, setUsers] = useState({});
 
   const [loading, setLoading] = useState(true);
@@ -166,6 +167,7 @@ function AdminQueues() {
             ...item.data(),
           }))
         );
+        setQueuesLoaded(true);
       },
       (error) => {
         console.error("Queues error:", error);
@@ -266,6 +268,64 @@ function AdminQueues() {
       );
   }, [services, queues]);
 
+  // Keep public service summaries in sync and repair older zero counters.
+  useEffect(() => {
+    if (!services.length || !queuesLoaded) return;
+
+    const batch = writeBatch(db);
+    let hasUpdates = false;
+
+    services.forEach((service) => {
+      const queueSummary = serviceQueueData.find(
+        (item) => item.id === service.id
+      );
+      const waitingCount = queueSummary?.waitingCount || 0;
+      const estimatedWait =
+        waitingCount * (Number(service.averageServiceTime) || 5);
+
+      if (
+        Number(service.waitingCount) !== waitingCount ||
+        Number(service.estimatedWait) !== estimatedWait
+      ) {
+        batch.update(doc(db, "services", service.id), {
+          waitingCount,
+          estimatedWait,
+          updatedAt: serverTimestamp(),
+        });
+        hasUpdates = true;
+      }
+    });
+
+    serviceQueueData.forEach((service) => {
+      service.waitingQueues.forEach((queue, index) => {
+        const position = index + 1;
+        if (Number(queue.queuePosition) !== position) {
+          batch.update(doc(db, "queues", queue.id), {
+            queuePosition: position,
+            updatedAt: serverTimestamp(),
+          });
+          hasUpdates = true;
+        }
+      });
+
+      service.servingQueues.forEach((queue) => {
+        if (Number(queue.queuePosition) !== 0) {
+          batch.update(doc(db, "queues", queue.id), {
+            queuePosition: 0,
+            updatedAt: serverTimestamp(),
+          });
+          hasUpdates = true;
+        }
+      });
+    });
+
+    if (hasUpdates) {
+      batch.commit().catch((syncError) => {
+        console.error("Unable to sync service queue totals:", syncError);
+      });
+    }
+  }, [services, serviceQueueData, queuesLoaded]);
+
   // ===================================================
   // SERVE NEXT
   // ===================================================
@@ -340,6 +400,41 @@ function AdminQueues() {
     }
   };
 
+  // Mark the last active customer complete when nobody is waiting.
+  const handleCompleteCurrent = async (service) => {
+    if (processingServiceId) return;
+
+    const currentQueue = service.currentQueue;
+    if (!currentQueue) return;
+
+    try {
+      setProcessingServiceId(service.id);
+      setError("");
+
+      const batch = writeBatch(db);
+
+      batch.update(doc(db, "queues", currentQueue.id), {
+        status: "completed",
+        completedAt: serverTimestamp(),
+      });
+
+      batch.update(doc(db, "services", service.id), {
+        currentTokenNumber:
+          Number(currentQueue.tokenNumber) ||
+          Number(service.currentTokenNumber) ||
+          0,
+        updatedAt: serverTimestamp(),
+      });
+
+      await batch.commit();
+    } catch (error) {
+      console.error(error);
+      setError("Unable to complete the current customer.");
+    } finally {
+      setProcessingServiceId(null);
+    }
+  };
+
   // ===================================================
   // SKIP
   // ===================================================
@@ -409,7 +504,10 @@ function AdminQueues() {
             service.id
           ),
           {
-            currentTokenNumber: 0,
+            currentTokenNumber:
+              Number(currentQueue.tokenNumber) ||
+              Number(service.currentTokenNumber) ||
+              0,
             updatedAt:
               serverTimestamp(),
           }
@@ -788,23 +886,31 @@ function AdminQueues() {
                         <button
                           type="button"
                           onClick={() =>
-                            handleServeNext(
-                              service
-                            )
+                            service.nextQueue
+                              ? handleServeNext(service)
+                              : handleCompleteCurrent(service)
                           }
                           disabled={
-                            !service.nextQueue ||
+                            (!service.currentQueue &&
+                              !service.nextQueue) ||
                             isProcessing
                           }
                           className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                         >
-                          <ArrowRight className="h-3.5 w-3.5" />
+                          {service.currentQueue &&
+                          !service.nextQueue ? (
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          ) : (
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          )}
 
                           {isProcessing
                             ? "Processing..."
-                            : service.currentQueue
-                              ? "Serve Next"
-                              : "Start Serving"}
+                            : !service.currentQueue
+                              ? "Start Serving"
+                              : service.nextQueue
+                                ? "Serve Next"
+                                : "Complete Current"}
                         </button>
 
                         <button

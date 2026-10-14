@@ -191,22 +191,8 @@ function Dashboard() {
       const estimatedWait =
         waitingCount * serviceTime;
 
-      const currentTokenNumber =
-        Number(service.currentTokenNumber) || 0;
-
-      const prefix =
-        service.name
-          ?.trim()
-          ?.charAt(0)
-          ?.toUpperCase() || "Q";
-
       const currentToken =
-        currentQueue?.token ||
-        (currentTokenNumber > 0
-          ? `${prefix}-${String(
-              currentTokenNumber
-            ).padStart(3, "0")}`
-          : "Not started");
+        currentQueue?.token || "--";
 
       const nextQueue =
         serviceWaitingQueues[0] || null;

@@ -480,7 +480,7 @@ function AdminServices() {
                     <div className="px-3 py-3 text-center">
 
                       <p className="text-[10px] text-slate-500">
-                        Current
+                        Last Called
                       </p>
 
                       <p className="mt-0.5 text-lg font-bold text-slate-900">

@@ -127,9 +127,7 @@ function Queue() {
       setLeaving(true);
       setError("");
 
-      await deleteDoc(
-        doc(db, "queues", queue.id)
-      );
+      await deleteDoc(doc(db, "queues", queue.id));
 
       setQueue(null);
     } catch (error) {
@@ -216,16 +214,18 @@ function Queue() {
 
   const isServing = queue.status === "serving";
 
-  const peopleAhead = isServing
-    ? 0
-    : Math.max(
-        0,
-        userTokenNumber - currentTokenNumber - 1
-      );
+  const hasSyncedPosition =
+    Number.isInteger(Number(queue.queuePosition)) &&
+    queue.queuePosition !== undefined &&
+    queue.queuePosition !== null;
 
   const position = isServing
     ? 0
-    : peopleAhead + 1;
+    : hasSyncedPosition
+      ? Number(queue.queuePosition)
+      : Math.max(1, userTokenNumber - currentTokenNumber);
+
+  const peopleAhead = isServing ? 0 : Math.max(0, position - 1);
 
   const waitPerPatient =
     Number(service?.averageServiceTime) ||
