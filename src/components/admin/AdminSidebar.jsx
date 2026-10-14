@@ -2,7 +2,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   ListOrdered,
-  Settings,
   BriefcaseBusiness,
   LogOut,
   X,
@@ -29,11 +28,6 @@ function AdminSidebar({ isOpen, onClose }) {
       label: "Services",
       icon: BriefcaseBusiness,
       path: "/admin/services",
-    },
-    {
-      label: "Settings",
-      icon: Settings,
-      path: "/admin/settings",
     },
   ];
 

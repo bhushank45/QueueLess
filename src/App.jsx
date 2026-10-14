@@ -23,7 +23,6 @@ import Queue from "./pages/user/Queue";
 import Dashboard from "./pages/admin/Dashboard";
 import AdminQueues from "./pages/admin/AdminQueues";
 import AdminServices from "./pages/admin/AdminServices";
-import AdminSettings from "./pages/admin/AdminSettings";
 
 // =====================================================
 // LOADING SCREEN
@@ -208,15 +207,6 @@ function AppRoutes() {
         }
       />
 
-      {/* Admin Settings */}
-      <Route
-        path="/admin/settings"
-        element={
-          <ProtectedRoute allowedRole="admin">
-            <AdminSettings />
-          </ProtectedRoute>
-        }
-      />
 
       {/* =================================================
           UNKNOWN ROUTES
