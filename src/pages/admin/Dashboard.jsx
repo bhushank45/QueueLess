@@ -12,6 +12,7 @@ import {
 
 import {
   collection,
+  getDocs,
   onSnapshot,
   query,
   where,
@@ -27,10 +28,11 @@ function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [services, setServices] = useState([]);
-  const [waitingQueues, setWaitingQueues] = useState([]);
-  const [servingQueues, setServingQueues] = useState([]);
+  const [activeQueues, setActiveQueues] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [servicesLoaded, setServicesLoaded] = useState(false);
+  const [queuesLoaded, setQueuesLoaded] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
   // =========================================================
@@ -49,12 +51,12 @@ function Dashboard() {
         }));
 
         setServices(serviceList);
-        setLoading(false);
+        setServicesLoaded(true);
       },
       (error) => {
         console.error("Services listener error:", error);
         setError("Unable to load services.");
-        setLoading(false);
+        setServicesLoaded(true);
       }
     );
 
@@ -62,57 +64,31 @@ function Dashboard() {
   }, []);
 
   // =========================================================
-  // LOAD WAITING QUEUES
+  // LOAD ACTIVE QUEUES IN ONE SNAPSHOT SO THE WAITING AND SERVING COUNTS
+  // ALWAYS COME FROM THE SAME FIRESTORE RESULT.
   // =========================================================
 
   useEffect(() => {
-    const waitingQuery = query(
+    const activeQueuesQuery = query(
       collection(db, "queues"),
-      where("status", "==", "waiting")
+      where("status", "in", ["waiting", "serving"])
     );
 
     const unsubscribe = onSnapshot(
-      waitingQuery,
+      activeQueuesQuery,
       (snapshot) => {
         const queueList = snapshot.docs.map((queueDoc) => ({
           id: queueDoc.id,
           ...queueDoc.data(),
         }));
 
-        setWaitingQueues(queueList);
+        setActiveQueues(queueList);
+        setQueuesLoaded(true);
       },
       (error) => {
-        console.error("Waiting queue listener error:", error);
-        setError("Unable to load waiting queues.");
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  // =========================================================
-  // LOAD SERVING QUEUES
-  // =========================================================
-
-  useEffect(() => {
-    const servingQuery = query(
-      collection(db, "queues"),
-      where("status", "==", "serving")
-    );
-
-    const unsubscribe = onSnapshot(
-      servingQuery,
-      (snapshot) => {
-        const queueList = snapshot.docs.map((queueDoc) => ({
-          id: queueDoc.id,
-          ...queueDoc.data(),
-        }));
-
-        setServingQueues(queueList);
-      },
-      (error) => {
-        console.error("Serving queue listener error:", error);
-        setError("Unable to load serving queues.");
+        console.error("Active queue listener error:", error);
+        setError("Unable to load active queues.");
+        setQueuesLoaded(true);
       }
     );
 
@@ -122,6 +98,30 @@ function Dashboard() {
   // =========================================================
   // DASHBOARD STATISTICS
   // =========================================================
+
+  const activeServiceIds = useMemo(
+    () => new Set(services.map((service) => service.id)),
+    [services]
+  );
+
+  const orphanActiveQueues = activeQueues.filter(
+    (queue) => !activeServiceIds.has(queue.serviceId)
+  );
+  const serviceQueues = activeQueues.filter(
+    (queue) => activeServiceIds.has(queue.serviceId)
+  );
+  const waitingQueues = serviceQueues.filter(
+    (queue) => queue.status === "waiting"
+  );
+  const servingQueues = serviceQueues.filter(
+    (queue) => queue.status === "serving"
+  );
+  const initialLoading = !servicesLoaded || !queuesLoaded;
+  const liveStatus = error
+    ? "Connection issue"
+    : initialLoading
+      ? "Connecting..."
+      : "Live updates";
 
   const totalServices = services.length;
 
@@ -133,28 +133,31 @@ function Dashboard() {
 
   const currentlyServing = servingQueues.length;
 
-  // Calculate average estimated wait from service data
+  // Estimate each waiting customer's time from the number of people ahead.
   const averageWait = useMemo(() => {
     if (totalWaiting === 0) {
       return 0;
     }
 
-    let totalWait = 0;
-
+    const waitingByService = new Map();
     waitingQueues.forEach((queue) => {
-      const service = services.find(
-        (item) => item.id === queue.serviceId
-      );
-
-      const serviceTime =
-        Number(service?.averageServiceTime) ||
-        Number(service?.estimatedWait) ||
-        5;
-
-      totalWait += serviceTime;
+      const list = waitingByService.get(queue.serviceId) || [];
+      list.push(queue);
+      waitingByService.set(queue.serviceId, list);
     });
 
-    return Math.round(totalWait / totalWaiting);
+    let totalEstimatedWait = 0;
+    waitingByService.forEach((queuesForService, serviceId) => {
+      const service = services.find((item) => item.id === serviceId);
+      const serviceTime = Number(service?.averageServiceTime) || 5;
+      queuesForService
+        .sort((a, b) => Number(a.tokenNumber || 0) - Number(b.tokenNumber || 0))
+        .forEach((_, index) => {
+          totalEstimatedWait += index * serviceTime;
+        });
+    });
+
+    return Math.round(totalEstimatedWait / totalWaiting);
   }, [waitingQueues, services, totalWaiting]);
 
   // =========================================================
@@ -223,20 +226,44 @@ function Dashboard() {
   // =========================================================
 
   const handleRefresh = () => {
-    setLoading(true);
+    setRefreshing(true);
+    setError("");
 
-    // Firestore onSnapshot listeners automatically
-    // receive the latest data. This just gives visual feedback.
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    Promise.all([
+      getDocs(collection(db, "services")),
+      getDocs(
+        query(
+          collection(db, "queues"),
+          where("status", "in", ["waiting", "serving"])
+        )
+      ),
+    ])
+      .then(([servicesSnapshot, queuesSnapshot]) => {
+        setServices(
+          servicesSnapshot.docs.map((serviceDoc) => ({
+            id: serviceDoc.id,
+            ...serviceDoc.data(),
+          }))
+        );
+        setActiveQueues(
+          queuesSnapshot.docs.map((queueDoc) => ({
+            id: queueDoc.id,
+            ...queueDoc.data(),
+          }))
+        );
+      })
+      .catch((refreshError) => {
+        console.error("Dashboard refresh error:", refreshError);
+        setError("Unable to refresh dashboard data.");
+      })
+      .finally(() => setRefreshing(false));
   };
 
   // =========================================================
   // LOADING
   // =========================================================
 
-  if (loading && services.length === 0) {
+  if (initialLoading) {
     return (
       <main className="min-h-screen bg-slate-50">
         <AdminSidebar
@@ -328,15 +355,16 @@ function Dashboard() {
 
             <div className="flex items-center gap-2 sm:gap-3">
 
-              <div className="hidden items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 sm:flex">
+              <div className={`hidden items-center gap-2 rounded-full px-3 py-2 sm:flex ${error ? "bg-red-50" : "bg-emerald-50"}`}>
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  {!error && !initialLoading && (
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  )}
+                  <span className={`relative inline-flex h-2 w-2 rounded-full ${error ? "bg-red-500" : "bg-emerald-500"}`} />
                 </span>
 
-                <span className="text-xs font-semibold text-emerald-700">
-                  Live updates
+                <span className={`text-xs font-semibold ${error ? "text-red-700" : "text-emerald-700"}`}>
+                  {liveStatus}
                 </span>
               </div>
 
@@ -345,10 +373,11 @@ function Dashboard() {
                 onClick={handleRefresh}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
                 aria-label="Refresh dashboard"
+                disabled={refreshing}
               >
                 <RefreshCw
                   className={`h-4 w-4 ${
-                    loading ? "animate-spin" : ""
+                    refreshing ? "animate-spin" : ""
                   }`}
                 />
               </button>
@@ -369,10 +398,10 @@ function Dashboard() {
 
             <div className="mb-7">
 
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${error ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"}`}>
+                <span className={`h-2 w-2 rounded-full ${error ? "bg-red-500" : "bg-emerald-500"}`} />
 
-                SYSTEM ONLINE
+                {error ? "DATA CONNECTION ISSUE" : initialLoading ? "CONNECTING" : "SYSTEM ONLINE"}
               </div>
 
               <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
@@ -394,6 +423,15 @@ function Dashboard() {
               </div>
             )}
 
+            {orphanActiveQueues.length > 0 && (
+              <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <span className="font-semibold">
+                  {orphanActiveQueues.length} active queue {orphanActiveQueues.length === 1 ? "record is" : "records are"} linked to deleted or missing services.
+                </span>{" "}
+                These records are excluded from the service totals below. Restore the service or close those queue records in Firestore.
+              </div>
+            )}
+
             {/* =================================================
                 STATS
             ================================================= */}
@@ -403,7 +441,7 @@ function Dashboard() {
               <StatsCard
                 title="Total Services"
                 value={totalServices}
-                description={`${activeServices} currently accepting queues`}
+                description="All configured services"
                 icon={Building2}
                 iconClass="bg-blue-50 text-blue-600"
               />
@@ -411,7 +449,7 @@ function Dashboard() {
               <StatsCard
                 title="People Waiting"
                 value={totalWaiting}
-                description="Across all active queues"
+                description="Across available services"
                 icon={Users}
                 iconClass="bg-amber-50 text-amber-600"
               />
