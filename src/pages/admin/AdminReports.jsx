@@ -205,16 +205,14 @@ function AdminReports() {
       ["QueueLess Queue Report"],
       ["Service", selectedServiceName, "Date range", `${startDate || "Any"} to ${endDate || "Any"}`],
       [],
-      ["Total visits", "", "Completed", "", "Skipped / no-show", "", "Left queue", ""],
-      [summary.total, "", summary.completed, "", summary.skipped + summary.noShow, "", summary.left, ""],
+      ["Total visits", "Completed", "Skipped / no-show", "Left queue"],
+      [summary.total, summary.completed, summary.skipped + summary.noShow, summary.left],
       [],
       ["Queue details"],
-      ["Customer", "Email", "Service", "Token", "Status", "Joined", "Finished", "Wait"],
+      ["CUSTOMER", "SERVICE / TOKEN", "STATUS", "JOINED", "FINISHED", "WAIT"],
       ...reportRows.map((row) => [
-        row.customerName,
-        row.customerEmail || "—",
-        row.serviceName,
-        row.token || `#${row.tokenNumber ?? "—"}`,
+        [row.customerName, row.customerEmail || "—"].join("\n"),
+        [row.serviceName, row.token || `#${row.tokenNumber ?? "—"}`].join("\n"),
         row.outcome,
         formatDateTime(row.joinedAt),
         formatDateTime(row.finishedAt),
@@ -223,29 +221,23 @@ function AdminReports() {
     ];
     const reportSheet = XLSX.utils.aoa_to_sheet(rows);
     reportSheet["!cols"] = [
-      { wch: 24 },
-      { wch: 30 },
+      { wch: 32 },
+      { wch: 32 },
+      { wch: 20 },
       { wch: 26 },
-      { wch: 12 },
-      { wch: 18 },
-      { wch: 24 },
-      { wch: 24 },
-      { wch: 12 },
+      { wch: 26 },
+      { wch: 14 },
     ];
     reportSheet["!merges"] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
-      { s: { r: 6, c: 0 }, e: { r: 6, c: 7 } },
-      { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
-      { s: { r: 3, c: 2 }, e: { r: 3, c: 3 } },
-      { s: { r: 3, c: 4 }, e: { r: 3, c: 5 } },
-      { s: { r: 3, c: 6 }, e: { r: 3, c: 7 } },
-      { s: { r: 4, c: 0 }, e: { r: 4, c: 1 } },
-      { s: { r: 4, c: 2 }, e: { r: 4, c: 3 } },
-      { s: { r: 4, c: 4 }, e: { r: 4, c: 5 } },
-      { s: { r: 4, c: 6 }, e: { r: 4, c: 7 } },
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+      { s: { r: 6, c: 0 }, e: { r: 6, c: 5 } },
     ];
+    reportSheet["!rows"] = rows.map((_, index) => ({
+      hpt:
+        index === 0 ? 28 : index === 3 || index === 4 ? 24 : index >= 8 ? 36 : 20,
+    }));
     reportSheet["!autofilter"] = {
-      ref: `A8:H${rows.length}`,
+      ref: `A8:F${rows.length}`,
     };
     XLSX.utils.book_append_sheet(workbook, reportSheet, "Queue Report");
 
