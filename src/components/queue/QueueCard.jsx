@@ -92,21 +92,14 @@ function QueueCard({
 
       if (queueStartedAt && queueStartedAt !== previous.queueStartedAt) {
         void sendQueueAlert("queue-started", queueStartedAt);
-        if (queue.status === "waiting" && queue.queueStarted) {
-          const peopleAhead = Math.max(0, queue.position - 1);
-          if (peopleAhead === 2) {
-            void sendQueueAlert("two-ahead");
-          } else if (peopleAhead === 1) {
-            void sendQueueAlert("one-ahead");
-          }
-        }
-      } else if (queue.queueStarted && previous.status === "waiting" && queue.status === "waiting" && previous.position > queue.position) {
-        const previousPeopleAhead = Math.max(0, previous.position - 1);
+      }
+
+      if (queue.queueStarted && queue.status === "waiting") {
         const peopleAhead = Math.max(0, queue.position - 1);
 
-        if (previousPeopleAhead > 2 && peopleAhead <= 2 && peopleAhead > 1) {
+        if (peopleAhead === 2) {
           void sendQueueAlert("two-ahead");
-        } else if (previousPeopleAhead > 1 && peopleAhead <= 1 && peopleAhead > 0) {
+        } else if (peopleAhead === 1) {
           void sendQueueAlert("one-ahead");
         }
       }
