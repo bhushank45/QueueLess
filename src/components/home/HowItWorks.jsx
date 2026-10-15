@@ -6,8 +6,8 @@ const steps = [
     icon: Building2,
     title: "Choose a service",
     description:
-      "Select from healthcare clinics, campus administrative desks, banking windows, or technical mentors.",
-    feature: "Multiple departments supported",
+      "Browse available services and compare their live waiting counts and estimated wait times.",
+    feature: "Live service status",
     featureIcon: Building2,
   },
   {
@@ -15,8 +15,8 @@ const steps = [
     icon: Ticket,
     title: "Join the queue",
     description:
-      "Enter your name and mobile number. Instantly receive a digital token code with an accurate wait estimate.",
-    feature: "Instant ticket generation",
+      "Sign in or create an account, choose an open service, and receive your digital token.",
+    feature: "Instant token generation",
     featureIcon: Check,
   },
   {
@@ -24,8 +24,8 @@ const steps = [
     icon: Radio,
     title: "Track your token",
     description:
-      "Watch live wait times on your phone or on public displays. Get summoned directly to your assigned station.",
-    feature: "Live audio & screen alerts",
+      "Track your position and estimated wait in My Queue. Enable buzz alerts and keep this page open for queue notifications.",
+    feature: "Live updates & buzz alerts",
     featureIcon: Radio,
   },
 ];

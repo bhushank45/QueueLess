@@ -329,8 +329,7 @@ function Queue() {
                   </h3>
 
                   <p className="mt-1 text-[10px] leading-4 text-slate-500">
-                    Your queue information is synced directly
-                    with Firebase.
+                    Your token, position, and estimated wait stay up to date.
                   </p>
                 </div>
               </div>
@@ -344,12 +343,11 @@ function Queue() {
 
                 <div>
                   <h3 className="text-xs font-semibold text-slate-900">
-                    Live Sync Active
+                    Live Updates
                   </h3>
 
                   <p className="mt-1 text-[10px] leading-4 text-slate-500">
-                    Changes made by the administrator appear
-                    automatically.
+                    Queue changes appear here automatically while you wait.
                   </p>
                 </div>
               </div>
