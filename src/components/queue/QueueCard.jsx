@@ -21,38 +21,39 @@ function QueueCard({
     queueId: queue.id,
     position: queue.position,
   });
-  const alertedQueueId = useRef(null);
+  const alertedStages = useRef({ queueId: queue.id, stages: new Set() });
 
-  const sendOneAheadAlert = useCallback(async () => {
+  const sendQueueAlert = useCallback(async (peopleAhead) => {
+    const stageKey = `${queue.id}-${peopleAhead}`;
+
     if (
-      alertedQueueId.current === queue.id ||
+      alertedStages.current.stages.has(stageKey) ||
       !notificationRegistration.current ||
       Notification.permission !== "granted"
     ) {
       return;
     }
 
-    alertedQueueId.current = queue.id;
+    alertedStages.current.stages.add(stageKey);
 
     try {
       await notificationRegistration.current.showNotification(
-        "You’re nearly next in QueueLess",
+        peopleAhead === 2
+          ? "You’re getting closer in QueueLess"
+          : "You’re nearly next in QueueLess",
         {
-          body:
-            queue.position === 1
-              ? `Token ${queue.token}: you’re next in line.`
-              : queue.status === "serving"
-                ? `Token ${queue.token}: it’s your turn now.`
-                : `Token ${queue.token}: one person is ahead of you.`,
+          body: `Token ${queue.token}: ${peopleAhead} ${
+            peopleAhead === 1 ? "person is" : "people are"
+          } ahead of you.`,
           icon: "/favicon.svg",
-          tag: `queueless-one-ahead-${queue.id}`,
+          tag: `queueless-${peopleAhead}-ahead-${queue.id}`,
           vibrate: [200, 100, 200],
           data: { url: "/queue" },
         }
       );
       setAlertMessage("Buzz alert sent for this queue.");
     } catch (notificationError) {
-      alertedQueueId.current = null;
+      alertedStages.current.stages.delete(stageKey);
       console.error("Unable to show queue alert:", notificationError);
       setAlertMessage("Could not show the notification on this device.");
     }
@@ -66,23 +67,23 @@ function QueueCard({
         queueId: queue.id,
         position: queue.position,
       };
-      alertedQueueId.current = null;
+      alertedStages.current = { queueId: queue.id, stages: new Set() };
       return;
     }
 
-    if (
-      alertsEnabled &&
-      previous.position > 2 &&
-      queue.position <= 2
-    ) {
-      void sendOneAheadAlert();
+    if (alertsEnabled && previous.position > queue.position) {
+      const peopleAhead = Math.max(0, queue.position - 1);
+
+      if (peopleAhead === 2 || peopleAhead === 1) {
+        void sendQueueAlert(peopleAhead);
+      }
     }
 
     previousQueueState.current = {
       queueId: queue.id,
       position: queue.position,
     };
-  }, [alertsEnabled, queue.id, queue.position, queue.status, sendOneAheadAlert]);
+  }, [alertsEnabled, queue.id, queue.position, queue.status, sendQueueAlert]);
 
   const handleEnableAlerts = async () => {
     if (
@@ -125,8 +126,11 @@ function QueueCard({
       setAlertsEnabled(true);
       setAlertMessage("Buzz alerts enabled. You’ll be notified when you’re next.");
 
-      if (queue.status === "waiting" && queue.position === 2) {
-        await sendOneAheadAlert();
+      if (queue.status === "waiting") {
+        const peopleAhead = Math.max(0, queue.position - 1);
+        if (peopleAhead === 2 || peopleAhead === 1) {
+          await sendQueueAlert(peopleAhead);
+        }
       }
     } catch (notificationError) {
       console.error("Unable to enable queue notifications:", notificationError);
