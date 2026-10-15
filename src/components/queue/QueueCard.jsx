@@ -38,7 +38,12 @@ function QueueCard({
       await notificationRegistration.current.showNotification(
         "You’re nearly next in QueueLess",
         {
-          body: `Token ${queue.token}: one person is ahead of you.`,
+          body:
+            queue.position === 1
+              ? `Token ${queue.token}: you’re next in line.`
+              : queue.status === "serving"
+                ? `Token ${queue.token}: it’s your turn now.`
+                : `Token ${queue.token}: one person is ahead of you.`,
           icon: "/favicon.svg",
           tag: `queueless-one-ahead-${queue.id}`,
           vibrate: [200, 100, 200],
@@ -67,9 +72,8 @@ function QueueCard({
 
     if (
       alertsEnabled &&
-      queue.status === "waiting" &&
       previous.position > 2 &&
-      queue.position === 2
+      queue.position <= 2
     ) {
       void sendOneAheadAlert();
     }
