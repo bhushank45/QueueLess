@@ -287,6 +287,8 @@ function Queue() {
 
     serviceStatus: service?.status,
 
+    queueStarted: service?.queueStarted === true,
+
     queueStartedAt: service?.queueStartedAt,
   };
 

@@ -385,7 +385,10 @@ function AdminQueues() {
           currentTokenNumber:
             Number(nextQueue.tokenNumber) || 0,
           ...(!currentQueue
-            ? { queueStartedAt: serverTimestamp() }
+            ? {
+                queueStarted: true,
+                queueStartedAt: serverTimestamp(),
+              }
             : {}),
           updatedAt:
             serverTimestamp(),
@@ -426,6 +429,7 @@ function AdminQueues() {
           Number(currentQueue.tokenNumber) ||
           Number(service.currentTokenNumber) ||
           0,
+        queueStarted: false,
         updatedAt: serverTimestamp(),
       });
 
@@ -511,6 +515,7 @@ function AdminQueues() {
               Number(currentQueue.tokenNumber) ||
               Number(service.currentTokenNumber) ||
               0,
+            queueStarted: false,
             updatedAt:
               serverTimestamp(),
           }

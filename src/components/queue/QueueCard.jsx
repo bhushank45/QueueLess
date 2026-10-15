@@ -92,7 +92,15 @@ function QueueCard({
 
       if (queueStartedAt && queueStartedAt !== previous.queueStartedAt) {
         void sendQueueAlert("queue-started", queueStartedAt);
-      } else if (previous.status === "waiting" && queue.status === "waiting" && previous.position > queue.position) {
+        if (queue.status === "waiting" && queue.queueStarted) {
+          const peopleAhead = Math.max(0, queue.position - 1);
+          if (peopleAhead === 2) {
+            void sendQueueAlert("two-ahead");
+          } else if (peopleAhead === 1) {
+            void sendQueueAlert("one-ahead");
+          }
+        }
+      } else if (queue.queueStarted && previous.status === "waiting" && queue.status === "waiting" && previous.position > queue.position) {
         const previousPeopleAhead = Math.max(0, previous.position - 1);
         const peopleAhead = Math.max(0, queue.position - 1);
 
@@ -110,7 +118,7 @@ function QueueCard({
       status: queue.status,
       queueStartedAt: getTimestampKey(queue.queueStartedAt),
     };
-  }, [alertsEnabled, queue.id, queue.position, queue.status, queue.queueStartedAt, sendQueueAlert]);
+  }, [alertsEnabled, queue.id, queue.position, queue.status, queue.queueStarted, queue.queueStartedAt, sendQueueAlert]);
 
   const handleEnableAlerts = async () => {
     if (
@@ -153,7 +161,7 @@ function QueueCard({
       setAlertsEnabled(true);
       setAlertMessage("Buzz alerts enabled. Keep My Queue open for queue updates.");
 
-      if (queue.status === "waiting") {
+      if (queue.status === "waiting" && queue.queueStarted) {
         const peopleAhead = Math.max(0, queue.position - 1);
         if (peopleAhead === 2) {
           await sendQueueAlert("two-ahead");

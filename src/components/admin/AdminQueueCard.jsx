@@ -384,7 +384,10 @@ const AdminQueues = () => {
         currentTokenNumber:
           Number(nextQueue.tokenNumber) || 0,
         ...(!currentQueue
-          ? { queueStartedAt: serverTimestamp() }
+          ? {
+              queueStarted: true,
+              queueStartedAt: serverTimestamp(),
+            }
           : {}),
         updatedAt: serverTimestamp(),
       });
@@ -474,6 +477,7 @@ const AdminQueues = () => {
 
         batch.update(serviceRef, {
           currentTokenNumber: 0,
+          queueStarted: false,
           updatedAt: serverTimestamp(),
         });
       }
