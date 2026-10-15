@@ -122,14 +122,8 @@ function QueueCard({
       );
       notificationRegistration.current = registration;
       await navigator.serviceWorker.ready;
-      await registration.showNotification("QueueLess buzz is enabled", {
-        body: "This is a test notification. Keep My Queue open for queue alerts.",
-        icon: "/favicon.svg",
-        tag: `queueless-buzz-test-${queue.id}`,
-        vibrate: [200, 100, 200],
-      });
       setAlertsEnabled(true);
-      setAlertMessage("Test notification sent. Keep My Queue open for queue alerts.");
+      setAlertMessage("Buzz alerts enabled. You’ll be notified when you’re next.");
 
       if (queue.status === "waiting" && queue.position === 2) {
         await sendOneAheadAlert();
