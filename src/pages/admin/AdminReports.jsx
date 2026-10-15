@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, FileSpreadsheet, Filter } from "lucide-react";
-import * as XLSX from "xlsx";
 import { collection, onSnapshot } from "firebase/firestore";
 
 import AdminPageLayout from "../../components/admin/AdminPageLayout";
@@ -195,7 +194,8 @@ function AdminReports() {
     ),
   }), [reportRows]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    const XLSX = await import("xlsx-js-style");
     const workbook = XLSX.utils.book_new();
     const selectedServiceName =
       serviceFilter === "all"
@@ -239,6 +239,87 @@ function AdminReports() {
     reportSheet["!autofilter"] = {
       ref: `A8:F${rows.length}`,
     };
+    const setCellStyle = (row, column, style) => {
+      const address = XLSX.utils.encode_cell({ r: row, c: column });
+      if (reportSheet[address]) {
+        reportSheet[address].s = style;
+      }
+    };
+    const thinBottomBorder = {
+      bottom: { style: "thin", color: { rgb: "FFE2E8F0" } },
+    };
+
+    setCellStyle(0, 0, {
+      font: { name: "Aptos Display", sz: 16, bold: true, color: { rgb: "FFFFFFFF" } },
+      fill: { fgColor: { rgb: "FF1D5EFF" } },
+      alignment: { vertical: "center" },
+    });
+    [0, 2].forEach((column) =>
+      setCellStyle(1, column, {
+        font: { bold: true, color: { rgb: "FF334155" } },
+        fill: { fgColor: { rgb: "FFF1F5F9" } },
+        alignment: { vertical: "center" },
+      })
+    );
+    [1, 3].forEach((column) =>
+      setCellStyle(1, column, {
+        font: { color: { rgb: "FF334155" } },
+        alignment: { vertical: "center" },
+      })
+    );
+    [0, 1, 2, 3].forEach((column) => {
+      setCellStyle(3, column, {
+        font: { bold: true, color: { rgb: "FF475569" } },
+        fill: { fgColor: { rgb: "FFF1F5F9" } },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: thinBottomBorder,
+      });
+      setCellStyle(4, column, {
+        font: { sz: 14, bold: true, color: { rgb: "FF1D4ED8" } },
+        fill: { fgColor: { rgb: "FFEFF6FF" } },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: thinBottomBorder,
+      });
+    });
+    setCellStyle(6, 0, {
+      font: { sz: 12, bold: true, color: { rgb: "FF0F172A" } },
+      fill: { fgColor: { rgb: "FFF8FAFC" } },
+      alignment: { vertical: "center" },
+      border: thinBottomBorder,
+    });
+    for (let column = 0; column < 6; column += 1) {
+      setCellStyle(7, column, {
+        font: { bold: true, color: { rgb: "FF64748B" } },
+        fill: { fgColor: { rgb: "FFF1F5F9" } },
+        alignment: { vertical: "center", horizontal: "left", wrapText: true },
+        border: thinBottomBorder,
+      });
+    }
+    reportRows.forEach((row, index) => {
+      const excelRow = index + 8;
+      const baseStyle = {
+        fill: { fgColor: { rgb: index % 2 === 0 ? "FFFFFFFF" : "FFF8FAFC" } },
+        alignment: { vertical: "center", wrapText: true },
+        border: thinBottomBorder,
+      };
+      for (let column = 0; column < 6; column += 1) {
+        setCellStyle(excelRow, column, baseStyle);
+      }
+      const statusStyle = {
+        completed: { fill: "FFECFDF5", color: "FF047857" },
+        skipped: { fill: "FFFFFBEB", color: "FFB45309" },
+        "no-show": { fill: "FFFEF2F2", color: "FFB91C1C" },
+        left: { fill: "FFF1F5F9", color: "FF475569" },
+      }[row.outcome.toLowerCase()];
+      if (statusStyle) {
+        setCellStyle(excelRow, 2, {
+          font: { bold: true, color: { rgb: statusStyle.color } },
+          fill: { fgColor: { rgb: statusStyle.fill } },
+          alignment: { vertical: "center" },
+          border: thinBottomBorder,
+        });
+      }
+    });
     XLSX.utils.book_append_sheet(workbook, reportSheet, "Queue Report");
 
     const serviceSlug =
