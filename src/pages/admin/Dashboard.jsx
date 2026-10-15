@@ -136,7 +136,7 @@ function Dashboard() {
   // Estimate each waiting customer's time from the number of people ahead.
   const averageWait = useMemo(() => {
     if (totalWaiting === 0) {
-      return 0;
+      return null;
     }
 
     const waitingByService = new Map();
@@ -153,7 +153,8 @@ function Dashboard() {
       queuesForService
         .sort((a, b) => Number(a.tokenNumber || 0) - Number(b.tokenNumber || 0))
         .forEach((_, index) => {
-          totalEstimatedWait += index * serviceTime;
+          // The first person waiting is expected to wait for one service slot.
+          totalEstimatedWait += (index + 1) * serviceTime;
         });
     });
 
@@ -463,9 +464,19 @@ function Dashboard() {
               />
 
               <StatsCard
-                title="Avg. Wait"
-                value={`${averageWait} min`}
-                description="Estimated average waiting time"
+                title="Avg. Customer Wait"
+                value={
+                  initialLoading
+                    ? "…"
+                    : averageWait === null
+                      ? "—"
+                      : `${averageWait} min`
+                }
+                description={
+                  totalWaiting > 0
+                    ? "Across customers currently waiting"
+                    : "No customers currently waiting"
+                }
                 icon={Clock3}
                 iconClass="bg-emerald-50 text-emerald-600"
               />
