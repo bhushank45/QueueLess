@@ -197,53 +197,57 @@ function AdminReports() {
 
   const handleExport = () => {
     const workbook = XLSX.utils.book_new();
-    const summarySheet = XLSX.utils.aoa_to_sheet([
+    const selectedServiceName =
+      serviceFilter === "all"
+        ? "All services"
+        : serviceNames[serviceFilter] || "Selected service";
+    const rows = [
       ["QueueLess Queue Report"],
-      ["Service", serviceFilter === "all" ? "All services" : serviceNames[serviceFilter] || "Selected service"],
-      ["Terminal date range", `${startDate || "Any"} to ${endDate || "Any"}`],
-      ["Generated at", new Date().toLocaleString()],
+      ["Service", selectedServiceName, "Date range", `${startDate || "Any"} to ${endDate || "Any"}`],
       [],
-      ["Metric", "Value"],
-      ["Total queue visits", summary.total],
-      ["Completed", summary.completed],
-      ["Skipped", summary.skipped],
-      ["No-show", summary.noShow],
-      ["Left queue", summary.left],
-      ["Average wait (minutes)", summary.averageWait],
-      ["Average service time (minutes, completed only)", summary.averageService],
-    ]);
-
-    const detailSheet = XLSX.utils.json_to_sheet(
-      reportRows.map((row) => ({
-        Service: row.serviceName,
-        "Customer name": row.customerName,
-        Email: row.customerEmail,
-        Token: row.token || `#${row.tokenNumber ?? ""}`,
-        Status: row.outcome,
-        "Joined at": formatDateTime(row.joinedAt),
-        "Called at": formatDateTime(row.startedAt),
-        "Finished at": formatDateTime(row.finishedAt),
-        "Wait (minutes)": row.waitMinutes ?? "—",
-        "Service time (minutes)": row.serviceMinutes ?? "—",
-      })),
-      {
-        header: [
-          "Service",
-          "Customer name",
-          "Email",
-          "Token",
-          "Status",
-          "Joined at",
-          "Called at",
-          "Finished at",
-          "Wait (minutes)",
-          "Service time (minutes)",
-        ],
-      }
-    );
-
-    XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
-    XLSX.utils.book_append_sheet(workbook, detailSheet, "Queue details");
+      ["Total visits", "", "Completed", "", "Skipped / no-show", "", "Left queue", ""],
+      [summary.total, "", summary.completed, "", summary.skipped + summary.noShow, "", summary.left, ""],
+      [],
+      ["Queue details"],
+      ["Customer", "Email", "Service", "Token", "Status", "Joined", "Finished", "Wait"],
+      ...reportRows.map((row) => [
+        row.customerName,
+        row.customerEmail || "—",
+        row.serviceName,
+        row.token || `#${row.tokenNumber ?? "—"}`,
+        row.outcome,
+        formatDateTime(row.joinedAt),
+        formatDateTime(row.finishedAt),
+        row.waitMinutes == null ? "—" : `${row.waitMinutes} min`,
+      ]),
+    ];
+    const reportSheet = XLSX.utils.aoa_to_sheet(rows);
+    reportSheet["!cols"] = [
+      { wch: 24 },
+      { wch: 30 },
+      { wch: 26 },
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 24 },
+      { wch: 24 },
+      { wch: 12 },
+    ];
+    reportSheet["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+      { s: { r: 6, c: 0 }, e: { r: 6, c: 7 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
+      { s: { r: 3, c: 2 }, e: { r: 3, c: 3 } },
+      { s: { r: 3, c: 4 }, e: { r: 3, c: 5 } },
+      { s: { r: 3, c: 6 }, e: { r: 3, c: 7 } },
+      { s: { r: 4, c: 0 }, e: { r: 4, c: 1 } },
+      { s: { r: 4, c: 2 }, e: { r: 4, c: 3 } },
+      { s: { r: 4, c: 4 }, e: { r: 4, c: 5 } },
+      { s: { r: 4, c: 6 }, e: { r: 4, c: 7 } },
+    ];
+    reportSheet["!autofilter"] = {
+      ref: `A8:H${rows.length}`,
+    };
+    XLSX.utils.book_append_sheet(workbook, reportSheet, "Queue Report");
 
     const serviceSlug =
       serviceFilter === "all"

@@ -13,9 +13,12 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDocs,
   onSnapshot,
+  query,
   serverTimestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
 
 import { useEffect, useState } from "react";
@@ -256,6 +259,23 @@ function AdminServices() {
 
     try {
       setError("");
+
+      const activeQueuesSnapshot = await getDocs(
+        query(
+          collection(db, "queues"),
+          where("serviceId", "==", service.id)
+        )
+      );
+      const activeQueues = activeQueuesSnapshot.docs.filter((queueDoc) =>
+        ["waiting", "serving"].includes(queueDoc.data().status)
+      );
+
+      if (activeQueues.length > 0) {
+        setError(
+          `Cannot delete "${service.name}" while ${activeQueues.length} customer${activeQueues.length === 1 ? " is" : "s are"} waiting or being served. Complete or remove those queues first.`
+        );
+        return;
+      }
 
       await deleteDoc(
         doc(db, "services", service.id)
