@@ -286,6 +286,8 @@ function Queue() {
     status: queue.status,
 
     serviceStatus: service?.status,
+
+    queueStartedAt: service?.queueStartedAt,
   };
 
   return (

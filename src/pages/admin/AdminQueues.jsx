@@ -384,6 +384,9 @@ function AdminQueues() {
         {
           currentTokenNumber:
             Number(nextQueue.tokenNumber) || 0,
+          ...(!currentQueue
+            ? { queueStartedAt: serverTimestamp() }
+            : {}),
           updatedAt:
             serverTimestamp(),
         }

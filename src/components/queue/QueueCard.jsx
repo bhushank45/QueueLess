@@ -7,6 +7,13 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+function getTimestampKey(value) {
+  if (!value) return "";
+  if (typeof value.toMillis === "function") return String(value.toMillis());
+  if (value instanceof Date) return String(value.getTime());
+  return String(value);
+}
+
 function QueueCard({
   queue,
   onLeaveQueue,
@@ -20,11 +27,13 @@ function QueueCard({
   const previousQueueState = useRef({
     queueId: queue.id,
     position: queue.position,
+    status: queue.status,
+    queueStartedAt: getTimestampKey(queue.queueStartedAt),
   });
   const alertedStages = useRef({ queueId: queue.id, stages: new Set() });
 
-  const sendQueueAlert = useCallback(async (peopleAhead) => {
-    const stageKey = `${queue.id}-${peopleAhead}`;
+  const sendQueueAlert = useCallback(async (stage, eventKey = stage) => {
+    const stageKey = `${queue.id}-${stage}-${eventKey}`;
 
     if (
       alertedStages.current.stages.has(stageKey) ||
@@ -38,15 +47,20 @@ function QueueCard({
 
     try {
       await notificationRegistration.current.showNotification(
-        peopleAhead === 2
-          ? "You’re getting closer in QueueLess"
-          : "You’re nearly next in QueueLess",
+        stage === "queue-started"
+          ? "The QueueLess queue has started"
+          : stage === "two-ahead"
+            ? "You’re getting closer in QueueLess"
+            : "You’re nearly next in QueueLess",
         {
-          body: `Token ${queue.token}: ${peopleAhead} ${
-            peopleAhead === 1 ? "person is" : "people are"
-          } ahead of you.`,
+          body:
+            stage === "queue-started"
+              ? `The administrator has started serving customers. Your token is ${queue.token}.`
+              : stage === "two-ahead"
+                ? `Token ${queue.token}: two people are ahead of you.`
+                : `Token ${queue.token}: one person is ahead of you.`,
           icon: "/favicon.svg",
-          tag: `queueless-${peopleAhead}-ahead-${queue.id}`,
+          tag: `queueless-${stage}-${queue.id}-${eventKey}`,
           vibrate: [200, 100, 200],
           data: { url: "/queue" },
         }
@@ -66,24 +80,37 @@ function QueueCard({
       previousQueueState.current = {
         queueId: queue.id,
         position: queue.position,
+        status: queue.status,
+        queueStartedAt: getTimestampKey(queue.queueStartedAt),
       };
       alertedStages.current = { queueId: queue.id, stages: new Set() };
       return;
     }
 
-    if (alertsEnabled && previous.position > queue.position) {
-      const peopleAhead = Math.max(0, queue.position - 1);
+    if (alertsEnabled) {
+      const queueStartedAt = getTimestampKey(queue.queueStartedAt);
 
-      if (peopleAhead === 2 || peopleAhead === 1) {
-        void sendQueueAlert(peopleAhead);
+      if (queueStartedAt && queueStartedAt !== previous.queueStartedAt) {
+        void sendQueueAlert("queue-started", queueStartedAt);
+      } else if (previous.status === "waiting" && queue.status === "waiting" && previous.position > queue.position) {
+        const previousPeopleAhead = Math.max(0, previous.position - 1);
+        const peopleAhead = Math.max(0, queue.position - 1);
+
+        if (previousPeopleAhead > 2 && peopleAhead <= 2 && peopleAhead > 1) {
+          void sendQueueAlert("two-ahead");
+        } else if (previousPeopleAhead > 1 && peopleAhead <= 1 && peopleAhead > 0) {
+          void sendQueueAlert("one-ahead");
+        }
       }
     }
 
     previousQueueState.current = {
       queueId: queue.id,
       position: queue.position,
+      status: queue.status,
+      queueStartedAt: getTimestampKey(queue.queueStartedAt),
     };
-  }, [alertsEnabled, queue.id, queue.position, queue.status, sendQueueAlert]);
+  }, [alertsEnabled, queue.id, queue.position, queue.status, queue.queueStartedAt, sendQueueAlert]);
 
   const handleEnableAlerts = async () => {
     if (
@@ -124,12 +151,14 @@ function QueueCard({
       notificationRegistration.current = registration;
       await navigator.serviceWorker.ready;
       setAlertsEnabled(true);
-      setAlertMessage("Buzz alerts enabled. You’ll be notified when you’re next.");
+      setAlertMessage("Buzz alerts enabled. Keep My Queue open for queue updates.");
 
       if (queue.status === "waiting") {
         const peopleAhead = Math.max(0, queue.position - 1);
-        if (peopleAhead === 2 || peopleAhead === 1) {
-          await sendQueueAlert(peopleAhead);
+        if (peopleAhead === 2) {
+          await sendQueueAlert("two-ahead");
+        } else if (peopleAhead === 1) {
+          await sendQueueAlert("one-ahead");
         }
       }
     } catch (notificationError) {
