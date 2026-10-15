@@ -5,7 +5,8 @@ import {
   onSnapshot,
   query,
   where,
-  deleteDoc,
+  serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 import { Radio, Volume2 } from "lucide-react";
 
@@ -127,7 +128,10 @@ function Queue() {
       setLeaving(true);
       setError("");
 
-      await deleteDoc(doc(db, "queues", queue.id));
+      await updateDoc(doc(db, "queues", queue.id), {
+        status: "left",
+        leftAt: serverTimestamp(),
+      });
 
       setQueue(null);
     } catch (error) {

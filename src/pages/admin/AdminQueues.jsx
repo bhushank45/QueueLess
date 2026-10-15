@@ -6,6 +6,7 @@ import {
   Clock3,
   ListOrdered,
   SkipForward,
+  UserRoundX,
   Users,
 } from "lucide-react";
 
@@ -533,6 +534,49 @@ function AdminQueues() {
     }
   };
 
+  const handleNoShow = async (service) => {
+    if (processingServiceId) return;
+
+    const currentQueue = service.currentQueue;
+    const nextQueue = service.nextQueue;
+    if (!currentQueue) return;
+
+    try {
+      setProcessingServiceId(service.id);
+      setError("");
+
+      const batch = writeBatch(db);
+      batch.update(doc(db, "queues", currentQueue.id), {
+        status: "no_show",
+        noShowAt: serverTimestamp(),
+      });
+
+      if (nextQueue) {
+        batch.update(doc(db, "queues", nextQueue.id), {
+          status: "serving",
+          startedAt: serverTimestamp(),
+        });
+        batch.update(doc(db, "services", service.id), {
+          currentTokenNumber: Number(nextQueue.tokenNumber) || 0,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        batch.update(doc(db, "services", service.id), {
+          currentTokenNumber: 0,
+          queueStarted: false,
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+    } catch (error) {
+      console.error("Unable to mark customer as no-show:", error);
+      setError("Unable to mark this customer as no-show.");
+    } finally {
+      setProcessingServiceId(null);
+    }
+  };
+
   // ===================================================
   // LOADING
   // ===================================================
@@ -937,6 +981,18 @@ function AdminQueues() {
                           <SkipForward className="h-3.5 w-3.5" />
                           Skip
                         </button>
+
+                        {service.currentQueue && (
+                          <button
+                            type="button"
+                            onClick={() => handleNoShow(service)}
+                            disabled={isProcessing}
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <UserRoundX className="h-3.5 w-3.5" />
+                            No-show
+                          </button>
+                        )}
 
                       </div>
 

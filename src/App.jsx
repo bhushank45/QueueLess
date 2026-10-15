@@ -23,6 +23,7 @@ import Queue from "./pages/user/Queue";
 import Dashboard from "./pages/admin/Dashboard";
 import AdminQueues from "./pages/admin/AdminQueues";
 import AdminServices from "./pages/admin/AdminServices";
+import AdminReports from "./pages/admin/AdminReports";
 
 // =====================================================
 // LOADING SCREEN
@@ -203,6 +204,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRole="admin">
             <AdminServices />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/reports"
+        element={
+          <ProtectedRoute allowedRole="admin">
+            <AdminReports />
           </ProtectedRoute>
         }
       />

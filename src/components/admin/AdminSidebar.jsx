@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   ListOrdered,
   BriefcaseBusiness,
+  FileSpreadsheet,
   LogOut,
   X,
 } from "lucide-react";
@@ -28,6 +29,11 @@ function AdminSidebar({ isOpen, onClose }) {
       label: "Services",
       icon: BriefcaseBusiness,
       path: "/admin/services",
+    },
+    {
+      label: "Reports",
+      icon: FileSpreadsheet,
+      path: "/admin/reports",
     },
   ];
 
