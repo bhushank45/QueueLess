@@ -252,6 +252,8 @@ function Queue() {
     : "Just now";
 
   const displayQueue = {
+    id: queue.id,
+
     service:
       queue.serviceName ||
       service?.name ||
