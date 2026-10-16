@@ -24,6 +24,7 @@ function QueueCard({
   const [alertMessage, setAlertMessage] = useState("");
   const [enablingAlerts, setEnablingAlerts] = useState(false);
   const notificationRegistration = useRef(null);
+  const audioContextRef = useRef(null);
   const previousQueueState = useRef({
     queueId: queue.id,
     position: queue.position,
@@ -31,6 +32,69 @@ function QueueCard({
     queueStartedAt: getTimestampKey(queue.queueStartedAt),
   });
   const alertedStages = useRef({ queueId: queue.id, stages: new Set() });
+
+  const unlockQueueSound = useCallback(() => {
+    const AudioContextConstructor =
+      window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextConstructor) {
+      return Promise.resolve(false);
+    }
+
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContextConstructor();
+      }
+
+      const audioContext = audioContextRef.current;
+      return audioContext.state === "running"
+        ? Promise.resolve(true)
+        : audioContext
+            .resume()
+            .then(() => audioContext.state === "running")
+            .catch((audioError) => {
+              console.warn("QueueLess sound could not start:", audioError);
+              return false;
+            });
+    } catch (audioError) {
+      console.warn("QueueLess sound is unavailable:", audioError);
+      return Promise.resolve(false);
+    }
+  }, []);
+
+  const playQueueSound = useCallback(() => {
+    const audioContext = audioContextRef.current;
+    if (!audioContext || audioContext.state !== "running") return false;
+
+    const startAt = audioContext.currentTime;
+    const notes = [
+      { frequency: 659.25, offset: 0, duration: 0.16 },
+      { frequency: 783.99, offset: 0.12, duration: 0.16 },
+      { frequency: 1046.5, offset: 0.24, duration: 0.28 },
+    ];
+
+    notes.forEach(({ frequency, offset, duration }) => {
+      const oscillator = audioContext.createOscillator();
+      const volume = audioContext.createGain();
+      const noteStart = startAt + offset;
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, noteStart);
+      volume.gain.setValueAtTime(0.0001, noteStart);
+      volume.gain.exponentialRampToValueAtTime(0.07, noteStart + 0.02);
+      volume.gain.exponentialRampToValueAtTime(
+        0.0001,
+        noteStart + duration
+      );
+
+      oscillator.connect(volume);
+      volume.connect(audioContext.destination);
+      oscillator.start(noteStart);
+      oscillator.stop(noteStart + duration);
+    });
+
+    return true;
+  }, []);
 
   const sendQueueAlert = useCallback(async (stage, eventKey = stage) => {
     const stageKey = `${queue.id}-${stage}-${eventKey}`;
@@ -65,13 +129,17 @@ function QueueCard({
           data: { url: "/queue" },
         }
       );
-      setAlertMessage("Buzz alert sent for this queue.");
+      setAlertMessage(
+        playQueueSound()
+          ? "Queue alert sent with QueueLess sound."
+          : "Queue alert sent. Keep My Queue open for QueueLess sound."
+      );
     } catch (notificationError) {
       alertedStages.current.stages.delete(stageKey);
       console.error("Unable to show queue alert:", notificationError);
       setAlertMessage("Could not show the notification on this device.");
     }
-  }, [queue.id, queue.token]);
+  }, [playQueueSound, queue.id, queue.token]);
 
   useEffect(() => {
     const previous = previousQueueState.current;
@@ -131,6 +199,7 @@ function QueueCard({
     try {
       setEnablingAlerts(true);
       setAlertMessage("");
+      const queueSoundReady = unlockQueueSound();
 
       const permission =
         Notification.permission === "granted"
@@ -152,7 +221,12 @@ function QueueCard({
       notificationRegistration.current = registration;
       await navigator.serviceWorker.ready;
       setAlertsEnabled(true);
-      setAlertMessage("Buzz alerts enabled. Keep My Queue open for queue updates.");
+      const soundEnabled = await queueSoundReady;
+      setAlertMessage(
+        soundEnabled
+          ? "Buzz alerts and QueueLess sound enabled. Keep My Queue open."
+          : "Buzz alerts enabled. Keep My Queue open for queue updates."
+      );
 
       if (queue.status === "waiting" && queue.queueStarted) {
         const peopleAhead = Math.max(0, queue.position - 1);
@@ -169,6 +243,13 @@ function QueueCard({
       setEnablingAlerts(false);
     }
   };
+
+  useEffect(() => () => {
+    if (audioContextRef.current) {
+      void audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+  }, []);
 
   return (
     <div className="mx-auto max-w-2xl rounded-2xl border border-slate-100 bg-white px-6 py-8 shadow-sm sm:px-9 sm:py-10">
@@ -329,7 +410,7 @@ function QueueCard({
 
           <p className="mt-0.5 text-[10px] leading-4 text-slate-500">
             {alertMessage ||
-              "Live queue updates. Buzz alerts work while this page stays open."}
+              "Enable buzz for QueueLess sound and live alerts while this page stays open."}
           </p>
         </div>
 
