@@ -3,6 +3,7 @@ import {
   Building2,
   CheckCircle2,
   Clock3,
+  ExternalLink,
   ListOrdered,
   Menu,
   RefreshCw,
@@ -355,6 +356,16 @@ function Dashboard() {
             {/* Live Status + Refresh */}
 
             <div className="flex items-center gap-2 sm:gap-3">
+
+              <a
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:px-4 sm:text-sm"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>View site</span>
+              </a>
 
               <div className={`hidden items-center gap-2 rounded-full px-3 py-2 sm:flex ${error ? "bg-red-50" : "bg-emerald-50"}`}>
                 <span className="relative flex h-2 w-2">
