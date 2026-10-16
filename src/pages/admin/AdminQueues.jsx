@@ -115,6 +115,8 @@ function AdminQueues() {
   const [queues, setQueues] = useState([]);
   const [queuesLoaded, setQueuesLoaded] = useState(false);
   const [users, setUsers] = useState({});
+  const [expandedWaitingServices, setExpandedWaitingServices] =
+    useState({});
 
   const [loading, setLoading] = useState(true);
   const [processingServiceId, setProcessingServiceId] =
@@ -864,10 +866,21 @@ function AdminQueues() {
                             No customers waiting
                           </p>
                         ) : (
-                          <div className="space-y-1.5">
+                          <div
+                            className={`space-y-1.5 ${
+                              expandedWaitingServices[service.id]
+                                ? "max-h-56 overflow-y-auto overscroll-contain pr-1"
+                                : ""
+                            }`}
+                          >
 
                             {service.waitingQueues
-                              .slice(0, 4)
+                              .slice(
+                                0,
+                                expandedWaitingServices[service.id]
+                                  ? undefined
+                                  : 4
+                              )
                               .map(
                                 (
                                   queue,
@@ -915,18 +928,27 @@ function AdminQueues() {
                                 )
                               )}
 
-                            {service.waitingQueues
-                              .length >
-                              4 && (
-                              <p className="pt-1 text-center text-[10px] text-gray-400">
-                                +
-                                {service.waitingQueues.length -
-                                  4}{" "}
-                                more
-                              </p>
-                            )}
-
                           </div>
+                        )}
+
+                        {service.waitingQueues.length > 4 && (
+                          <button
+                            type="button"
+                            aria-expanded={Boolean(
+                              expandedWaitingServices[service.id]
+                            )}
+                            onClick={() =>
+                              setExpandedWaitingServices((current) => ({
+                                ...current,
+                                [service.id]: !current[service.id],
+                              }))
+                            }
+                            className="mt-1 w-full rounded-md py-1 text-center text-[10px] font-medium text-gray-500 transition hover:bg-gray-100 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                          >
+                            {expandedWaitingServices[service.id]
+                              ? "Show less"
+                              : `+${service.waitingQueues.length - 4} more`}
+                          </button>
                         )}
 
                       </div>
