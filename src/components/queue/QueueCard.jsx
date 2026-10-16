@@ -67,31 +67,29 @@ function QueueCard({
     if (!audioContext || audioContext.state !== "running") return false;
 
     const startAt = audioContext.currentTime;
-    const notes = [
-      { frequency: 659.25, offset: 0, duration: 0.16 },
-      { frequency: 783.99, offset: 0.12, duration: 0.16 },
-      { frequency: 1046.5, offset: 0.24, duration: 0.28 },
+    const oscillator = audioContext.createOscillator();
+    const volume = audioContext.createGain();
+    const buzzPulses = [
+      { start: 0, end: 0.11 },
+      { start: 0.18, end: 0.29 },
+      { start: 0.36, end: 0.53 },
     ];
 
-    notes.forEach(({ frequency, offset, duration }) => {
-      const oscillator = audioContext.createOscillator();
-      const volume = audioContext.createGain();
-      const noteStart = startAt + offset;
+    oscillator.type = "sawtooth";
+    oscillator.frequency.setValueAtTime(155, startAt);
+    volume.gain.setValueAtTime(0.0001, startAt);
 
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(frequency, noteStart);
-      volume.gain.setValueAtTime(0.0001, noteStart);
-      volume.gain.exponentialRampToValueAtTime(0.07, noteStart + 0.02);
-      volume.gain.exponentialRampToValueAtTime(
-        0.0001,
-        noteStart + duration
-      );
-
-      oscillator.connect(volume);
-      volume.connect(audioContext.destination);
-      oscillator.start(noteStart);
-      oscillator.stop(noteStart + duration);
+    buzzPulses.forEach(({ start, end }) => {
+      volume.gain.setValueAtTime(0.0001, startAt + start);
+      volume.gain.exponentialRampToValueAtTime(0.055, startAt + start + 0.012);
+      volume.gain.setValueAtTime(0.055, startAt + end - 0.012);
+      volume.gain.exponentialRampToValueAtTime(0.0001, startAt + end);
     });
+
+    oscillator.connect(volume);
+    volume.connect(audioContext.destination);
+    oscillator.start(startAt);
+    oscillator.stop(startAt + 0.55);
 
     return true;
   }, []);
