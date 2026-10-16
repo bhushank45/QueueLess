@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { auth, db } from "../../firebase/firebase";
+import { getEmailValidationError } from "../../utils/validation";
 
 function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,8 +25,6 @@ function RegisterForm() {
 
     const newErrors = {};
 
-    const emailRegex = /^[A-Za-z0-9._%+-]+@gmail\.com$/;
-
     const passwordRegex = /^.{8,}$/;
 
     setErrors({});
@@ -43,8 +42,9 @@ function RegisterForm() {
     // -----------------------------
     if (!email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!emailRegex.test(email.trim())) {
-      newErrors.email = "Enter a valid email address";
+    } else {
+      const emailError = getEmailValidationError(email);
+      if (emailError) newErrors.email = emailError;
     }
 
     // -----------------------------

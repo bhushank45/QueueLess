@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { auth, db } from "../../firebase/firebase";
+import { getEmailValidationError } from "../../utils/validation";
 
 function LoginForm() {
   const navigate = useNavigate();
@@ -36,9 +37,6 @@ function LoginForm() {
     // Validation
     // =========================
 
-    const emailRegex =
-      /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-
     const passwordRegex = /^.{8,}$/;
 
     setErrors({});
@@ -46,8 +44,9 @@ function LoginForm() {
     // Email validation
     if (!email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!emailRegex.test(email.trim())) {
-      newErrors.email = "Enter a valid email address";
+    } else {
+      const emailError = getEmailValidationError(email);
+      if (emailError) newErrors.email = emailError;
     }
 
     // Password validation
