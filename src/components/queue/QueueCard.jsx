@@ -25,6 +25,7 @@ function QueueCard({
   const [enablingAlerts, setEnablingAlerts] = useState(false);
   const notificationRegistration = useRef(null);
   const audioContextRef = useRef(null);
+  const queueSoundBufferRef = useRef(null);
   const previousQueueState = useRef({
     queueId: queue.id,
     position: queue.position,
@@ -62,9 +63,40 @@ function QueueCard({
     }
   }, []);
 
+  const loadQueueSound = useCallback(async () => {
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return false;
+    if (queueSoundBufferRef.current) return true;
+
+    try {
+      const response = await fetch("/queueless-notification.mp3");
+      if (!response.ok) {
+        throw new Error("QueueLess notification audio could not be loaded.");
+      }
+
+      const audioData = await response.arrayBuffer();
+      queueSoundBufferRef.current = await audioContext.decodeAudioData(audioData);
+      return true;
+    } catch (audioError) {
+      console.warn("QueueLess notification audio could not be loaded:", audioError);
+      return false;
+    }
+  }, []);
+
   const playQueueSound = useCallback(() => {
     const audioContext = audioContextRef.current;
     if (!audioContext || audioContext.state !== "running") return false;
+
+    if (queueSoundBufferRef.current) {
+      const source = audioContext.createBufferSource();
+      const volume = audioContext.createGain();
+      source.buffer = queueSoundBufferRef.current;
+      volume.gain.setValueAtTime(0.8, audioContext.currentTime);
+      source.connect(volume);
+      volume.connect(audioContext.destination);
+      source.start();
+      return true;
+    }
 
     const startAt = audioContext.currentTime;
     const oscillator = audioContext.createOscillator();
@@ -197,7 +229,9 @@ function QueueCard({
     try {
       setEnablingAlerts(true);
       setAlertMessage("");
-      const queueSoundReady = unlockQueueSound();
+      const queueSoundReady = unlockQueueSound().then((unlocked) =>
+        unlocked ? loadQueueSound() : false
+      );
 
       const permission =
         Notification.permission === "granted"
