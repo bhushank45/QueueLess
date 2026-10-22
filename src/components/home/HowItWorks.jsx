@@ -32,7 +32,7 @@ const steps = [
 
 function HowItWorks() {
   return (
-    <section className="bg-[#f8f7ff] px-6 py-20">
+    <section id="how-it-works" className="scroll-mt-24 bg-[#f8f7ff] px-6 py-20">
       <div className="mx-auto max-w-7xl">
         {/* Section Header */}
         <div className="mx-auto mb-12 max-w-3xl text-center">

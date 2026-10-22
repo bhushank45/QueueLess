@@ -2,7 +2,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Clock3,
-  RefreshCw,
   X,
   Building2,
 } from "lucide-react";
@@ -600,14 +599,6 @@ function Services() {
             <p className="mt-1 text-sm text-slate-500">
               Services are managed by QueueLess administrators.
             </p>
-
-          </div>
-
-          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700">
-
-            <RefreshCw className="h-3.5 w-3.5" />
-
-            Live
 
           </div>
 

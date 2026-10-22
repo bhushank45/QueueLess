@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 function CTA() {
   return (
@@ -25,20 +26,20 @@ function CTA() {
 
           {/* Buttons */}
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <button
-              type="button"
+            <Link
+              to="/services"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
             >
               Join Queue
               <ArrowRight size={17} />
-            </button>
+            </Link>
 
-            <button
-              type="button"
+            <a
+              href="#how-it-works"
               className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Learn More
-            </button>
+              How It Works
+            </a>
           </div>
         </div>
       </div>

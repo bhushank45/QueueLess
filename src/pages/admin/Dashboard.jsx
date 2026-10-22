@@ -6,14 +6,12 @@ import {
   ExternalLink,
   ListOrdered,
   Menu,
-  RefreshCw,
   Users,
   UserCheck,
 } from "lucide-react";
 
 import {
   collection,
-  getDocs,
   onSnapshot,
   query,
   where,
@@ -30,10 +28,8 @@ function Dashboard() {
 
   const [services, setServices] = useState([]);
   const [activeQueues, setActiveQueues] = useState([]);
-
   const [servicesLoaded, setServicesLoaded] = useState(false);
   const [queuesLoaded, setQueuesLoaded] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
   // =========================================================
@@ -224,44 +220,6 @@ function Dashboard() {
   ]);
 
   // =========================================================
-  // REFRESH / RELOAD INDICATOR
-  // =========================================================
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setError("");
-
-    Promise.all([
-      getDocs(collection(db, "services")),
-      getDocs(
-        query(
-          collection(db, "queues"),
-          where("status", "in", ["waiting", "serving"])
-        )
-      ),
-    ])
-      .then(([servicesSnapshot, queuesSnapshot]) => {
-        setServices(
-          servicesSnapshot.docs.map((serviceDoc) => ({
-            id: serviceDoc.id,
-            ...serviceDoc.data(),
-          }))
-        );
-        setActiveQueues(
-          queuesSnapshot.docs.map((queueDoc) => ({
-            id: queueDoc.id,
-            ...queueDoc.data(),
-          }))
-        );
-      })
-      .catch((refreshError) => {
-        console.error("Dashboard refresh error:", refreshError);
-        setError("Unable to refresh dashboard data.");
-      })
-      .finally(() => setRefreshing(false));
-  };
-
-  // =========================================================
   // LOADING
   // =========================================================
 
@@ -380,19 +338,6 @@ function Dashboard() {
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
-                aria-label="Refresh dashboard"
-                disabled={refreshing}
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${
-                    refreshing ? "animate-spin" : ""
-                  }`}
-                />
-              </button>
             </div>
           </div>
         </header>
