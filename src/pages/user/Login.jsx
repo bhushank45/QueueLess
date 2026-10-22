@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import LoginForm from "../../components/auth/LoginForm";
-import { Ticket, Zap, RefreshCw, Clock } from "lucide-react";
+import { ArrowLeft, Ticket, Zap, RefreshCw, Clock } from "lucide-react";
 
 function Login() {
   return (
@@ -99,6 +99,14 @@ function Login() {
 
           <section className="flex items-center justify-center px-5 py-10 sm:px-10 lg:px-14">
             <div className="w-full max-w-md">
+              <Link
+                to="/"
+                className="mb-8 inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-blue-50 hover:text-blue-600"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Home
+              </Link>
+
               <div className="mb-10 text-center md:hidden">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/20">
                   <Ticket className="h-7 w-7 text-white" />
